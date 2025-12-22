@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
 import { Camera, Home, RefreshCw, ChevronLeft, ChevronRight, Star, Shield, Menu, X, User, LogOut, Search, Plus, Settings, Lock, Globe, Eye, EyeOff, Sparkles, BookOpen, Zap, Brain, Users, Briefcase, Coffee, Gamepad2, GraduationCap, ShoppingBag, Copy, Check, FileText, MessageSquare, Languages, Volume2, Loader2 } from 'lucide-react';
+import './index.css';
 
 // Supabase Configuration
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://ttkttetepaqvexmhymvq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0a3R0ZXRlcGFxdmV4bWh5bXZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzM4MTAsImV4cCI6MjA4MjAwOTgxMH0.7e1ZT-VOLm3P_V1ndcGSnP4oUtLkCwUwVQGuVkWuMdY';
 
 // Initialize Supabase Client
 const createClient = (url, key) => ({
@@ -95,7 +97,7 @@ const FlowBrowser = () => {
   
   // AI Assistant state
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const [aiMode, setAiMode] = useState('summarize'); // summarize, qa, translate, explain
+  const [aiMode, setAiMode] = useState('summarize');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [aiQuestion, setAiQuestion] = useState('');
@@ -108,20 +110,24 @@ const FlowBrowser = () => {
   const iframeRef = useRef(null);
 
   useEffect(() => {
-      // Remove loading screen
-  const loadingScreen = document.querySelector('.loading-screen');
-  if (loadingScreen) {
-    setTimeout(() => {
-      loadingScreen.style.opacity = '0';
-      setTimeout(() => {
-        loadingScreen.remove();
-      }, 300);
+    // Remove loading screen after component mounts
+    const timer = setTimeout(() => {
+      const loadingScreen = document.querySelector('.loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => {
+          loadingScreen.remove();
+        }, 300);
+      }
     }, 500);
-  }
+
     checkUser();
     loadBookmarks();
     loadWorkspaces();
     initializePrivacyFeatures();
+
+    return () => clearTimeout(timer);
   }, []);
 
   const checkUser = async () => {
@@ -157,17 +163,20 @@ const FlowBrowser = () => {
 
   const initializePrivacyFeatures = () => {
     if (antiFingerprint) {
-      // Randomize canvas fingerprint
-      const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-      HTMLCanvasElement.prototype.toDataURL = function(type) {
-        const context = this.getContext('2d');
-        const imageData = context.getImageData(0, 0, this.width, this.height);
-        for (let i = 0; i < imageData.data.length; i += 4) {
-          imageData.data[i] += Math.floor(Math.random() * 3) - 1;
-        }
-        context.putImageData(imageData, 0, 0);
-        return originalToDataURL.call(this, type);
-      };
+      try {
+        const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+        HTMLCanvasElement.prototype.toDataURL = function(type) {
+          const context = this.getContext('2d');
+          const imageData = context.getImageData(0, 0, this.width, this.height);
+          for (let i = 0; i < imageData.data.length; i += 4) {
+            imageData.data[i] += Math.floor(Math.random() * 3) - 1;
+          }
+          context.putImageData(imageData, 0, 0);
+          return originalToDataURL.call(this, type);
+        };
+      } catch (e) {
+        console.log('Anti-fingerprinting initialization skipped');
+      }
     }
 
     if (autoDeleteCookies) {
@@ -349,7 +358,19 @@ const FlowBrowser = () => {
   };
 
   const goHome = () => {
-    navigateToUrl('about:blank');
+    const updatedWorkspaces = [...workspaces];
+    const currentWorkspace = workspaces[activeWorkspace];
+    const currentTab = currentWorkspace.tabs[activeTab];
+    
+    updatedWorkspaces[activeWorkspace].tabs[activeTab] = {
+      ...currentTab,
+      url: 'about:blank',
+      title: 'New Tab',
+      history: [...currentTab.history, 'about:blank'],
+      historyIndex: currentTab.history.length
+    };
+    saveWorkspaces(updatedWorkspaces);
+    setUrlInput('');
   };
 
   const addBookmark = () => {
@@ -384,14 +405,11 @@ const FlowBrowser = () => {
     
     let securedUrl = url;
     
-    // Apply VPN routing if enabled
     if (vpnEnabled) {
       const provider = VPN_PROVIDERS.find(v => v.id === vpnProvider);
       console.log('Routing through VPN:', provider.name);
-      // In production, this would actually route through VPN
     }
     
-    // Apply proxy if enabled
     if (proxyEnabled) {
       securedUrl = PROXY_ENDPOINT + encodeURIComponent(url);
     }
@@ -401,8 +419,6 @@ const FlowBrowser = () => {
 
   // AI Assistant Functions
   const extractPageContent = async () => {
-    // In a real implementation, this would extract content from the iframe
-    // For demo purposes, we'll simulate content
     const currentWorkspace = workspaces[activeWorkspace];
     const currentTab = currentWorkspace.tabs[activeTab];
     
@@ -410,7 +426,6 @@ const FlowBrowser = () => {
       return 'No page loaded. Please navigate to a webpage first.';
     }
     
-    // Simulated content extraction
     return `Content from ${currentTab.title} at ${currentTab.url}`;
   };
 
@@ -499,7 +514,7 @@ const FlowBrowser = () => {
   const WorkspaceIcon = currentWorkspace.icon;
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex flex-col overflow-hidden font-['JetBrains_Mono',monospace]">
+    <div className="w-full h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-black/40 backdrop-blur-xl border-b border-cyan-500/30 px-4 py-3 flex items-center gap-3 shadow-lg shadow-cyan-500/10">
         <div className="flex items-center gap-2">
@@ -514,7 +529,7 @@ const FlowBrowser = () => {
         {/* Workspace Indicator */}
         <button
           onClick={() => setShowWorkspaces(!showWorkspaces)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-${currentWorkspace.color}-500/20 border border-${currentWorkspace.color}-500/30 hover:bg-${currentWorkspace.color}-500/30 transition-all`}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 hover:bg-purple-500/30 transition-all"
         >
           <WorkspaceIcon className="w-4 h-4 text-cyan-400" />
           <span className="text-sm text-cyan-400">{currentWorkspace.name}</span>
@@ -576,6 +591,7 @@ const FlowBrowser = () => {
             </div>
             <button 
               onClick={addBookmark}
+              type="button"
               className="p-2 rounded-lg bg-slate-800/50 hover:bg-yellow-500/20 text-cyan-400 hover:text-yellow-400 transition-all hover:shadow-lg hover:shadow-yellow-500/20"
               title="Add Bookmark"
             >
@@ -606,11 +622,13 @@ const FlowBrowser = () => {
             </button>
             
             {user ? (
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 text-cyan-400 transition-all relative"
-              >
-                <User className="w-5 h-5" />
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 text-cyan-400 transition-all"
+                >
+                  <User className="w-5 h-5" />
+                </button>
                 {showMenu && (
                   <div className="absolute right-0 top-full mt-2 bg-slate-900 border border-cyan-500/30 rounded-lg shadow-xl shadow-cyan-500/20 p-2 min-w-[200px] z-50">
                     <div className="px-3 py-2 text-xs text-cyan-400/70 border-b border-cyan-500/20 mb-2">
@@ -632,7 +650,7 @@ const FlowBrowser = () => {
                     </button>
                   </div>
                 )}
-              </button>
+              </div>
             ) : (
               <button
                 onClick={() => setShowAuth(true)}
@@ -694,7 +712,7 @@ const FlowBrowser = () => {
           {currentTab.url === 'about:blank' ? (
             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900">
               <div className="text-center space-y-4 animate-fade-in">
-                <div className="w-24 h-24 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/50 mx-auto mb-6 animate-float">
+                <div className="w-24 h-24 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/50 mx-auto mb-6">
                   <Globe className="w-12 h-12 text-white" />
                 </div>
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
@@ -702,6 +720,9 @@ const FlowBrowser = () => {
                 </h1>
                 <p className="text-cyan-400/70 text-lg max-w-md">
                   Workspace: {currentWorkspace.name}
+                </p>
+                <p className="text-cyan-400/50 text-sm">
+                  Enter a URL above to start browsing
                 </p>
                 <div className="flex items-center gap-4 justify-center mt-8 flex-wrap">
                   {vpnEnabled && (
@@ -1298,30 +1319,13 @@ const FlowBrowser = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
 
-export default FlowBrowser;
+// Mount the app
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <FlowBrowser />
+  </React.StrictMode>
+);
