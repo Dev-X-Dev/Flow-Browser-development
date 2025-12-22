@@ -108,6 +108,16 @@ const FlowBrowser = () => {
   const iframeRef = useRef(null);
 
   useEffect(() => {
+      // Remove loading screen
+  const loadingScreen = document.querySelector('.loading-screen');
+  if (loadingScreen) {
+    setTimeout(() => {
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => {
+        loadingScreen.remove();
+      }, 300);
+    }, 500);
+  }
     checkUser();
     loadBookmarks();
     loadWorkspaces();
