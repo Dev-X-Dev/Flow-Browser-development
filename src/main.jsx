@@ -989,18 +989,16 @@ const FlowBrowser = () => {
 
       {/* Mobile Menu Drawer */}
       {showMobileMenu && isMobile && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={() => setShowMobileMenu(false)}>
-          <div 
-            className="absolute left-0 top-0 bottom-0 w-4/5 max-w-sm bg-slate-900 border-r border-cyan-500/30 shadow-2xl overflow-y-auto safe-area-bottom"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-cyan-400">Menu</h2>
-                <button onClick={() => setShowMobileMenu(false)} className="p-1 hover:bg-slate-800/50 rounded transition-colors">
-                  <X className="w-6 h-6 text-cyan-400" />
-                </button>
-              </div>
+  <div 
+    className="fixed inset-0 z-50"
+    onClick={() => setShowMobileMenu(false)}
+  >
+    {/* Dark overlay */}
+    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    
+    {/* Menu drawer */}
+    <div 
+      className="absolute left-0 top-0 bottom-0 w-4/5 max-w-sm bg-slate-900 border-r border-cyan-500/30 shadow-2xl overflow-y-auto safe-area-bottom"></div>
 
               {/* Workspace Selector */}
               <div className="mb-6">
